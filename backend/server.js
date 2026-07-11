@@ -8,39 +8,49 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
+// Health Check
 app.get("/", (req, res) => {
-    res.send("🚀 Backend Running");
+    res.status(200).send("🚀 LeetCode Insight Backend Running");
 });
 
+// Analyze LeetCode Problem
 app.post("/analyze", async (req, res) => {
 
     try {
 
         const { title, description } = req.body;
 
-        console.log("Received:", title);
+        // Validate request
+        if (!title || !description) {
+            return res.status(400).json({
+                error: "Title and description are required."
+            });
+        }
+
+        console.log(`📥 Analyzing: ${title}`);
 
         let insight = await generateInsight(title, description);
 
-        // Remove markdown if AI returns ```json ... ```
-        insight = insight.replace(/```json/g, "");
-        insight = insight.replace(/```/g, "");
+        // Remove markdown code fences if present
+        insight = insight
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
 
         const parsedInsight = JSON.parse(insight);
-        console.log("Sending to extension:");
-        console.log(parsedInsight);
-        res.json(parsedInsight);
 
-    }
+        console.log("✅ Insight generated");
 
-    catch (error) {
+        res.status(200).json(parsedInsight);
 
-        console.error(error);
+    } catch (error) {
+
+        console.error("❌ Server Error:", error.message);
 
         res.status(500).json({
-            error: "Failed to analyze problem."
+            error: "Failed to generate AI insight."
         });
 
     }
@@ -48,7 +58,5 @@ app.post("/analyze", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-
-    console.log(`Server running on http://localhost:${PORT}`);
-
+    console.log(`🚀 Server running on port ${PORT}`);
 });

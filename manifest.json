@@ -18,9 +18,11 @@
       "styles/sidebar.css"
     ],
     "js": [
-      "content/sidebar.js",
-      "content/domParser.js",
-      "content/content.js"
+    "content/domParser.js",
+    "content/sidebar.js",
+    "content/cache.js",
+    "content/api.js",
+    "content/content.js"
     ]
   }
 ]

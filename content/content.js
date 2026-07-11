@@ -1,72 +1,63 @@
 createSidebar();
 
-function getCachedInsight(title) {
-
-    return new Promise((resolve) => {
-
-        chrome.storage.local.get([title], (result) => {
-
-            resolve(result[title] || null);
-
-        });
-
-    });
-
-}
-
-function saveInsight(title, insight) {
-
-    chrome.storage.local.set({
-
-        [title]: insight
-
-    });
-
-}
-
-async function sendProblemToBackend() {
+async function sendProblemToBackend(forceRefresh = false) {
 
     const problem = getProblemData();
 
-    console.log("Checking cache...");
-
-    // 1. Check cache first
-    const cachedInsight = await getCachedInsight(problem.title);
-
-    if (cachedInsight) {
-        console.log(cachedInsight);//changed
-        console.log("✅ Loaded from cache");
-
-        updateSidebar(cachedInsight);
-
+    if (!problem || !problem.title) {
+        showError("Unable to detect the current LeetCode problem.");
         return;
-
     }
-
-    console.log("❌ Cache miss. Calling backend...");
 
     try {
 
-        const response = await fetch("http://localhost:3000/analyze", {
+        // Check cache first (unless refresh is forced)
+        if (!forceRefresh) {
 
-            method: "POST",
+            console.log("🔍 Checking cache...");
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+            const cachedInsight = await getCachedInsight(problem.title);
 
-            body: JSON.stringify(problem)
+            if (cachedInsight) {
 
-        });
+                console.log("✅ Loaded from cache");
 
-        const insight = await response.json();//changed
-        console.log("Received from backend:");
-console.log(insight);
-console.log(typeof insight);
-        // 2. Save to cache
-        saveInsight(problem.title, insight);
+                updateSidebar(cachedInsight);
 
-        console.log("✅ Saved to cache");
+                return;
+
+            }
+
+        }
+
+        console.log("🌐 Requesting AI insight...");
+
+        showLoading();
+
+        const response = await fetch(
+            "https://leetcode-insight-extension-1.onrender.com/analyze",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(problem)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        const insight = await response.json();
+
+        if (!insight) {
+            throw new Error("Invalid response from server.");
+        }
+
+        await saveInsight(problem.title, insight);
+
+        console.log("✅ Insight saved to cache");
 
         updateSidebar(insight);
 
@@ -74,14 +65,17 @@ console.log(typeof insight);
 
     catch (error) {
 
-        console.error("Backend Error:", error);
+        console.error("❌ AI Error:", error);
+
+        showError(
+            "Unable to generate AI insights. Please check your connection and try again."
+        );
 
     }
 
 }
 
+// Wait for LeetCode page to finish rendering
 setTimeout(() => {
-
     sendProblemToBackend();
-
 }, 3000);

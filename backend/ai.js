@@ -3,6 +3,8 @@ require("dotenv").config();
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+
 async function generateInsight(title, description) {
 
     const prompt = `
@@ -18,39 +20,44 @@ ${description}
 
 Return ONLY valid JSON.
 
-Use exactly this structure:
+Use EXACTLY this schema:
 
 {
-  "summary":"",
-  "asked":"",
-  "input":"",
-  "output":"",
-  "constraints":"",
-  "notes":"",
-  "pattern":"",
-  "timeComplexity":"",
-  "spaceComplexity":"",
-  "hint":""
+  "summary": "",
+  "asked": "",
+  "input": "",
+  "output": "",
+  "constraints": "",
+  "notes": "",
+  "pattern": "",
+  "timeComplexity": "",
+  "spaceComplexity": "",
+  "hint": ""
 }
 
 Rules:
-- Do not wrap JSON inside markdown.
-- Do not write explanation outside JSON.
-- Hint should not reveal the solution.
-- Pattern should be only one phrase like:
-  "Sliding Window"
-  "Binary Search"
-  "Greedy"
-  "Bit Manipulation"
+1. Return ONLY JSON.
+2. No markdown.
+3. No code fences.
+4. No explanation outside JSON.
+5. Hint should guide the user without revealing the algorithm or solution.
+6. Pattern must be a short phrase (e.g. "Binary Search", "Greedy", "Sliding Window", "Bit Manipulation").
+7. Keep every field concise and useful.
 `;
 
     try {
 
         const response = await axios.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            OPENROUTER_URL,
             {
                 model: "openrouter/auto",
+                temperature: 0.3,
                 messages: [
+                    {
+                        role: "system",
+                        content:
+                            "You are an expert competitive programming mentor. Always return valid JSON only."
+                    },
                     {
                         role: "user",
                         content: prompt
@@ -61,17 +68,27 @@ Rules:
                 headers: {
                     Authorization: `Bearer ${API_KEY}`,
                     "Content-Type": "application/json"
-                }
+                },
+                timeout: 60000
             }
         );
 
-        return response.data.choices[0].message.content;
+        const content = response.data?.choices?.[0]?.message?.content;
 
-    } catch (err) {
+        if (!content) {
+            throw new Error("Empty AI response.");
+        }
 
-        console.error(err.response?.data || err.message);
+        return content.trim();
 
-        return null;
+    } catch (error) {
+
+        console.error(
+            "OpenRouter Error:",
+            error.response?.data || error.message
+        );
+
+        throw new Error("Failed to generate AI insight.");
 
     }
 
