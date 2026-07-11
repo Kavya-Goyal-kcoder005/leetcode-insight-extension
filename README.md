@@ -28,21 +28,18 @@ Built to help developers understand problems faster without revealing the comple
 
 ### Sidebar
 
-```
-assets/sidebar.png
-```
+![Sidebar](assets/sidebar.png)
 
-### AI Insights
-
-```
-assets/insights.png
-```
 
 ### Loading State
 
-```
-assets/loading.png
-```
+![Loading Stats](assets/Generating.png)
+
+
+### AI Insights
+
+![AI Insights](assets/insights.png)
+
 
 ---
 
