@@ -30,12 +30,12 @@ function getProblemDescription() {
 function getProblemData() {
 
     // Title
-    const titleElement = document.querySelector("a[href*='/problems/']");
+    const titleElement = document.querySelector(".text-title-large");
 
     const title = titleElement
         ? titleElement.innerText.trim()
         : "Unknown Title";
-
+    console.log(title);
     // Description
     const descriptionElement = document.querySelector(
     '[data-track-load="description_content"]'
@@ -62,7 +62,22 @@ async function sendProblemToBackend() {
 
     const problem = getProblemData();
 
-    console.log("Sending problem to backend...");
+    console.log("Checking cache...");
+
+    // 1. Check cache first
+    const cachedInsight = await getCachedInsight(problem.title);
+
+    if (cachedInsight) {
+
+        console.log("✅ Loaded from cache");
+
+        updateSidebar(cachedInsight);
+
+        return;
+
+    }
+
+    console.log("❌ Cache miss. Calling backend...");
 
     try {
 
@@ -80,7 +95,10 @@ async function sendProblemToBackend() {
 
         const insight = await response.json();
 
-        console.log("AI Insight:", insight);
+        // 2. Save to cache
+        saveInsight(problem.title, insight);
+
+        console.log("✅ Saved to cache");
 
         updateSidebar(insight);
 

@@ -28,7 +28,7 @@ function createSidebar() {
             sendProblemToBackend();
         });
 }
-
+console.log("AI Response:", data);
 function updateSidebar(insight) {
 
     const container = document.getElementById("insight-content");

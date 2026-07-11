@@ -29,7 +29,8 @@ app.post("/analyze", async (req, res) => {
         insight = insight.replace(/```/g, "");
 
         const parsedInsight = JSON.parse(insight);
-
+        console.log("Sending to extension:");
+        console.log(parsedInsight);
         res.json(parsedInsight);
 
     }
