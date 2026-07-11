@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "LeetCode Insight",
+  "version": "1.0.0",
+  "description": "AI-powered quick revision insights for LeetCode problems.",
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+  {
+    "matches": [
+      "https://leetcode.com/problems/*"
+    ],
+    "css": [
+      "styles/sidebar.css"
+    ],
+    "js": [
+      "content/sidebar.js",
+      "content/domParser.js",
+      "content/content.js"
+    ]
+  }
+]
+}
